@@ -34,7 +34,10 @@ rec
         else
           { inherit root; src = root; }
         # src: no, root: yes
-      else throw "please specify either 'src' or 'root'";
+      else if ! isNull attrs then
+        {src = attrs; root = attrs;}
+      else
+        throw "please specify either 'src' or 'root'";
   # The list of _all_ crates (incl. transitive dependencies) with name,
   # version and sha256 of the crate
   # Example:
