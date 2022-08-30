@@ -1,5 +1,6 @@
 { src
   #| What command to run during the build phase
+, registriesCustomDl
 , cargoBuild
 , cargoBuildOptions
 , remapPathPrefix
@@ -476,8 +477,12 @@ let
   # file that cargo itself uses to double check the sha256
   unpackCrate = name: version: sha256:
     let
+      url =
+        if ! isNull registriesCustomDl
+        then "${registriesCustomDl}/${name}/${version}/download"
+        else "https://crates.io/api/v1/crates/${name}/${version}/download";
       crate = fetchurl {
-        url = "https://crates.io/api/v1/crates/${name}/${version}/download";
+        inherit url;
         inherit sha256;
         name = "download-${name}-${version}";
       };

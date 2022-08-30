@@ -22,18 +22,20 @@ let
   mkConfig = arg:
     import ./config.nix { inherit lib arg libb builtinz; };
 
-  buildPackage = arg:
+  buildPackage = args@{registries? {}, ... }:
     let
-      config = mkConfig arg;
+      config = mkConfig args;
       gitDependencies =
         libb.findGitDependencies { inherit (config) cargolock gitAllRefs gitSubmodules; };
       cargoconfig =
         if builtinz.pathExists (toString config.root + "/.cargo/config")
         then builtins.readFile (config.root + "/.cargo/config")
         else null;
+      registriesCustomDl = registry.custom.dl or null;
       build = args: import ./build.nix (
         {
           inherit gitDependencies;
+          inherit registriesCustomDl;
           version = config.packageVersion;
         } // config.buildConfig // defaultBuildAttrs // args
       );
@@ -47,6 +49,7 @@ let
               inherit cargoconfig;
               inherit (config) cargolock cargotomls copySources copySourcesFrom;
             };
+            inherit registriesCustomDl;
             inherit (config) userAttrs;
             # TODO: custom cargoTestCommands should not be needed here
             cargoTestCommands = map (cmd: "${cmd} || true") config.buildConfig.cargoTestCommands;
